@@ -65,9 +65,17 @@ const fragmentShader = /* glsl */`
 
 // ─── Fullscreen quad ──────────────────────────────────────────────────────────
 
-function QuantumOrb({ bass, mids, inverted }: { bass: number; mids: number; inverted: boolean }) {
+function QuantumOrb({ bass, mids, absZ, inverted }: { bass: number; mids: number; absZ: number; inverted: boolean }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const { viewport, size } = useThree();
+  const invertedRef = useRef(inverted);
+  invertedRef.current = inverted;
+  const bassRef = useRef(bass);
+  bassRef.current = bass;
+  const midsRef = useRef(mids);
+  midsRef.current = mids;
+  const absZRef = useRef(absZ);
+  absZRef.current = absZ;
 
   const uniforms = useMemo(() => ({
     uTime:       { value: 0 },
@@ -78,11 +86,20 @@ function QuantumOrb({ bass, mids, inverted }: { bass: number; mids: number; inve
   }), []);
 
   useFrame(({ clock, size: frameSize }) => {
-    uniforms.uTime.value = clock.getElapsedTime();
+    const t = clock.getElapsedTime();
+    const b = bassRef.current;
+    const m = midsRef.current;
+    const az = absZRef.current;
+    const inv = invertedRef.current;
+    uniforms.uTime.value = t;
     uniforms.uResolution.value.set(frameSize.width, frameSize.height);
-    uniforms.uBass.value += (bass - uniforms.uBass.value) * 0.008;
-    uniforms.uMids.value += (mids - uniforms.uMids.value) * 0.012;
-    uniforms.uInvert.value += ((inverted ? 1 : 0) - uniforms.uInvert.value) * 0.04;
+    // Breath amplitude and speed driven by absZ — the breath IS the signal
+    const breathAmp = 0.04 + az * 0.04;
+    const breathSpeed = 0.4 + az * 0.15;
+    const breath = breathAmp * Math.sin(t * breathSpeed);
+    uniforms.uBass.value += (b + breath - uniforms.uBass.value) * 0.0016;
+    uniforms.uMids.value += (m - uniforms.uMids.value) * 0.0016;
+    uniforms.uInvert.value += ((inv ? 1 : 0) - uniforms.uInvert.value) * 0.04;
   });
 
   return (
@@ -100,7 +117,7 @@ function QuantumOrb({ bass, mids, inverted }: { bass: number; mids: number; inve
 
 // ─── HUD ──────────────────────────────────────────────────────────────────────
 
-function ZScoreMeter({ history, cumZ, inverted }: { history: { cumZ: number }[]; cumZ: number; inverted: boolean }) {
+function ZScoreMeter({ history, signalZ, mindlampMode, inverted }: { history: { cumZ: number }[]; signalZ: number; mindlampMode: boolean; inverted: boolean }) {
   const width = 280;
   const height = 60;
   const midY = height / 2;
@@ -134,7 +151,7 @@ function ZScoreMeter({ history, cumZ, inverted }: { history: { cumZ: number }[];
         )}
       </svg>
       <div className="absolute right-0 top-0 text-xs font-mono" style={{ color: textColor }}>
-        cumZ {cumZ > 0 ? "+" : ""}{cumZ.toFixed(3)}
+        {mindlampMode ? "Z" : "cumZ"} {signalZ > 0 ? "+" : ""}{signalZ.toFixed(3)}
       </div>
     </div>
   );
@@ -149,17 +166,19 @@ export default function MindLamp() {
   } = useQuantumStream();
 
   const [inverted, setInverted] = useState(false);
+  const [mindlampMode, setMindlampMode] = useState(false);
 
-  const cumZ = latest?.cumZ ?? 0;
-  const absZ = Math.abs(cumZ);
+  // MindLamp mode: instantaneous trialZ drives visuals (responsive, artistic)
+  // Cumulative mode: cumZ builds over trials (PEAR protocol, scientific)
+  const signalZ = mindlampMode ? (latest?.trialZ ?? 0) : (latest?.cumZ ?? 0);
+  const absZ = Math.abs(signalZ);
 
-  const bass = visual.thresholdCrossed
-    ? 0.35 + Math.min(absZ / 6, 0.65)
-    : 0.35 + absZ * 0.03;
-
-  const mids = visual.thresholdCrossed
-    ? 0.5 + cumZ / 5
-    : 0.5 + cumZ / 20;
+  // Smooth sigmoid gate: ~0 below threshold, ~1 above — no hard switch
+  const gate = 1 / (1 + Math.exp(-4 * (absZ - 1.69)));
+  // Bass floor rises with Z above threshold; breath rides on top in useFrame
+  const bass = 0.35 + gate * Math.min(absZ / 8, 0.4);
+  // Color shift scales with Z — subtle at rest, clear above threshold
+  const mids = 0.5 + signalZ * (0.02 + gate * 0.15);
 
   // Adaptive text colors based on mode
   const fg = inverted ? "rgba(0,0,0," : "rgba(255,255,255,";
@@ -173,7 +192,7 @@ export default function MindLamp() {
         gl={{ antialias: false, alpha: false }}
         className="absolute inset-0"
       >
-        <QuantumOrb bass={bass} mids={mids} inverted={inverted} />
+        <QuantumOrb bass={bass} mids={mids} absZ={absZ} inverted={inverted} />
       </Canvas>
 
 
@@ -194,7 +213,7 @@ export default function MindLamp() {
 
         {/* Center: cumulative deviation plot + threshold */}
         <div className="flex flex-col items-center gap-2">
-          <ZScoreMeter history={history} cumZ={latest?.cumZ ?? 0} inverted={inverted} />
+          <ZScoreMeter history={history} signalZ={signalZ} mindlampMode={mindlampMode} inverted={inverted} />
           {visual.thresholdCrossed && (
             <div
               className="px-4 py-1.5 rounded-full text-sm tracking-wide animate-pulse"
@@ -218,6 +237,34 @@ export default function MindLamp() {
 
         {/* Right: controls */}
         <div className="flex items-end gap-3 pointer-events-auto">
+          {/* MindLamp / Cumulative toggle */}
+          <button
+            onClick={() => setMindlampMode(!mindlampMode)}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
+            style={{
+              background: mindlampMode
+                ? (inverted ? "rgba(180,120,0,0.12)" : "rgba(255,200,80,0.12)")
+                : (inverted ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)"),
+              border: `1px solid ${mindlampMode
+                ? (inverted ? "rgba(180,120,0,0.3)" : "rgba(255,200,80,0.25)")
+                : (inverted ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.1)")}`,
+            }}
+            title={mindlampMode ? "MindLamp mode (instant)" : "Cumulative mode (PEAR)"}
+          >
+            <svg width="11" height="14" viewBox="0 0 11 14" fill="none">
+              <path d="M5.5 1C3.01 1 1 3.01 1 5.5c0 1.8 1.02 3.37 2.5 4.17V11h4V9.67C8.98 8.87 10 7.3 10 5.5 10 3.01 7.99 1 5.5 1Z"
+                stroke={mindlampMode
+                  ? (inverted ? "rgba(180,120,0,0.8)" : "rgba(255,200,80,0.8)")
+                  : (inverted ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)")}
+                strokeWidth="1.2" fill="none" />
+              <line x1="3.5" y1="12" x2="7.5" y2="12"
+                stroke={mindlampMode
+                  ? (inverted ? "rgba(180,120,0,0.8)" : "rgba(255,200,80,0.8)")
+                  : (inverted ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)")}
+                strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </button>
+
           {/* Invert toggle */}
           <button
             onClick={() => setInverted(!inverted)}
