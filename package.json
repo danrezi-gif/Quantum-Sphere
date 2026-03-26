@@ -2,7 +2,7 @@
   "name": "quantum-sphere",
   "version": "0.1.0",
   "type": "module",
-  "license": "GPL-3.0",
+  "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
     "build": "vite build",

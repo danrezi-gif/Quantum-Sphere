@@ -1,16 +1,15 @@
 /**
  * Quantum Random Number stream — PEAR/MindLamp protocol
  *
- * Fetches 200 quantum random bits from ANU QRNG exactly once per second,
- * computes per-trial and cumulative Z-scores, then broadcasts each trial
- * result to all connected SSE clients.
+ * Fetches 200 quantum random bytes from LfD QRNG (ID Quantique hardware),
+ * extracts 1 bit (LSB) from each byte, computes per-trial and cumulative
+ * Z-scores, then broadcasts each trial result to all connected SSE clients.
  *
- * One trial = 200 uint8 values, each contributing its LSB as a bit.
+ * One trial = 200 LSBs from 200 quantum random bytes.
  * Expected mean = 100, σ = √50 ≈ 7.071 (Binomial(200, 0.5))
  *
- * This preserves real-time experimental integrity: the next fetch begins
- * only AFTER the current trial has been emitted to all clients.
- * No look-ahead buffering — intention and quantum event are simultaneous.
+ * Real-time integrity: the next fetch begins only AFTER the current trial
+ * has been emitted. No look-ahead buffering.
  */
 
 import type { Request, Response } from "express";
@@ -24,54 +23,25 @@ const BITS_PER_TRIAL = 200;
 const EXPECTED_MEAN = 100;
 const TRIAL_SD = Math.sqrt(50); // √50 ≈ 7.071
 
-// Quantum RNG sources
-const SOURCES = {
-  anu_legacy: "https://qrng.anu.edu.au/API/jsonI.php",
-  anu: "https://api.quantumnumbers.anu.edu.au",
-  lfd: "https://lfdr.de/qrng_api/qrng",
-} as const;
-
-export type QRNGSource = keyof typeof SOURCES;
+const LFD_URL = "https://lfdr.de/qrng_api/qrng";
 
 export interface TrialResult {
-  trial: number;           // trial number since session start
-  bitSum: number;          // sum of 200 bits (0–200)
-  trialZ: number;          // per-trial Z-score
-  cumZ: number;            // cumulative Z (primary signal)
-  timestamp: number;       // unix ms
-  source: string;          // which QRNG source was used
-  rawBits: number[];       // the 200 uint8 values (LSBs used as bits)
+  trial: number;
+  bitSum: number;
+  trialZ: number;
+  cumZ: number;
+  timestamp: number;
+  rawBits: number[];
 }
 
-// --- Quantum fetch — selects source from QRNG_SOURCE env var ---
+// --- Quantum fetch ---
 
-async function fetchFromANU(): Promise<number[]> {
-  const apiKey = process.env.ANU_API_KEY ?? "";
-  const hasKey = apiKey && apiKey !== "your_api_key_here";
-  const url = hasKey
-    ? `${SOURCES.anu}?length=${BITS_PER_TRIAL}&type=uint8`
-    : `${SOURCES.anu_legacy}?length=${BITS_PER_TRIAL}&type=uint8`;
-  const headers: Record<string, string> = {};
-  if (hasKey) headers["x-api-key"] = apiKey;
-
-  const res = await fetch(url, { headers });
+async function fetchQuantumBits(): Promise<number[]> {
+  const res = await fetch(`${LFD_URL}?length=${BITS_PER_TRIAL}&format=HEX`);
   const body = await res.text();
-  if (!res.ok) throw new Error(`ANU ${res.status} — ${body.slice(0, 200)}`);
-  const json = JSON.parse(body) as { success: boolean; data: number[] };
-  if (!json.success || !Array.isArray(json.data) || json.data.length < BITS_PER_TRIAL) {
-    throw new Error(`ANU bad response: ${body.slice(0, 200)}`);
-  }
-  return json.data.slice(0, BITS_PER_TRIAL);
-}
-
-async function fetchFromLfD(): Promise<number[]> {
-  // LfD returns hex string; request 200 bytes = 200 uint8 values
-  const res = await fetch(`${SOURCES.lfd}?length=${BITS_PER_TRIAL}&format=HEX`);
-  const body = await res.text();
-  if (!res.ok) throw new Error(`LfD ${res.status} — ${body.slice(0, 200)}`);
+  if (!res.ok) throw new Error(`LfD QRNG ${res.status} — ${body.slice(0, 200)}`);
   const json = JSON.parse(body) as { qrn: string; length: number };
   if (!json.qrn) throw new Error(`LfD bad response: ${body.slice(0, 200)}`);
-  // Convert hex string to array of uint8
   const bytes: number[] = [];
   for (let i = 0; i < json.qrn.length && bytes.length < BITS_PER_TRIAL; i += 2) {
     bytes.push(parseInt(json.qrn.slice(i, i + 2), 16));
@@ -82,32 +52,13 @@ async function fetchFromLfD(): Promise<number[]> {
   return bytes;
 }
 
-function getSource(): QRNGSource {
-  return (process.env.QRNG_SOURCE as QRNGSource) ?? "lfd";
-}
-
-async function fetchQuantumBits(): Promise<number[]> {
-  const source = getSource();
-  switch (source) {
-    case "anu":
-    case "anu_legacy":
-      return fetchFromANU();
-    case "lfd":
-      return fetchFromLfD();
-    default:
-      return fetchFromLfD();
-  }
-}
-
 // --- Session state (shared across all SSE clients) ---
-// All viewers see the same quantum stream — this is intentional.
-// The stream is driven by the server, not per-client.
 
 let sessionActive = false;
 let sessionTimer: ReturnType<typeof setTimeout> | null = null;
 
 let trialCount = 0;
-let cumulativeBitSum = 0; // running total of all bit sums
+let cumulativeBitSum = 0;
 
 const clients = new Set<Response>();
 
@@ -149,19 +100,16 @@ async function runTrial() {
         if (sessionActive) sessionTimer = setTimeout(runTrial, 3000);
         return;
       }
-      // silent retry after 800ms for transient 500s
       await new Promise((r) => setTimeout(r, 800));
       if (!sessionActive) return;
     }
   }
 
-  // Extract LSB from each uint8 as the random bit
   const bitSum = bits.reduce((acc, b) => acc + (b & 1), 0);
   trialCount++;
   cumulativeBitSum += bitSum;
 
   const trialZ = (bitSum - EXPECTED_MEAN) / TRIAL_SD;
-  // Cumulative Z: (total_bits_sum - N*100) / (σ * √N)
   const cumZ = (cumulativeBitSum - trialCount * EXPECTED_MEAN) / (TRIAL_SD * Math.sqrt(trialCount));
 
   const result: TrialResult = {
@@ -170,19 +118,15 @@ async function runTrial() {
     trialZ: Math.round(trialZ * 1000) / 1000,
     cumZ: Math.round(cumZ * 1000) / 1000,
     timestamp: Date.now(),
-    source: getSource(),
     rawBits: bits,
   };
 
-  // Log to CSV
   if (logFile) {
     appendFileSync(logFile, `${result.trial},${result.bitSum},${result.trialZ},${result.cumZ},${result.timestamp}\n`);
   }
 
   broadcastTrial(result);
 
-  // Schedule next trial — 1500ms gives comfortable margin over ANU's 1 req/sec rate limit
-  // (fetch itself takes ~200-400ms, so 1000ms timeout would send requests ~600ms apart)
   if (sessionActive) {
     sessionTimer = setTimeout(runTrial, 1500);
   }
@@ -196,7 +140,6 @@ export function startSession() {
   trialCount = 0;
   cumulativeBitSum = 0;
 
-  // Create session log file
   try { mkdirSync(LOG_DIR, { recursive: true }); } catch {}
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
   logFile = join(LOG_DIR, `session-${ts}.csv`);
@@ -232,7 +175,6 @@ export function handleSSE(req: Request, res: Response) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.flushHeaders();
 
-  // Send current state immediately on connect
   res.write(`event: connected\ndata: ${JSON.stringify({
     sessionActive,
     trialCount,
@@ -244,7 +186,6 @@ export function handleSSE(req: Request, res: Response) {
 
   clients.add(res);
 
-  // Heartbeat to keep connection alive through proxies
   const heartbeat = setInterval(() => {
     try {
       res.write(": heartbeat\n\n");
