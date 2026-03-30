@@ -185,9 +185,9 @@ export default function MindLamp() {
   const fg = inverted ? "rgba(0,0,0," : "rgba(255,255,255,";
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden select-none" style={{ background: inverted ? "#fff" : "#000" }}>
+    <div className="relative w-full h-screen overflow-hidden select-none" style={{ background: inverted ? "#fff" : "#000" }}>
 
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 0 }}>
         <Canvas
           camera={{ position: [0, 0, 5], fov: 60 }}
           dpr={[1, 2]}
@@ -222,7 +222,7 @@ export default function MindLamp() {
 
       {/* Center: cumulative deviation plot — truly centered */}
       {history.length > 0 && (
-        <div className="absolute z-10 flex flex-col items-center" style={{ bottom: 32, left: '50%', transform: 'translateX(-50%)' }}>
+        <div className="absolute z-10 flex flex-col items-center" style={{ bottom: 32, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
           <ZScoreMeter history={history} signalZ={signalZ} mindlampMode={mindlampMode} inverted={inverted} />
           {visual.thresholdCrossed && (
             <div
