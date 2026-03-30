@@ -168,6 +168,7 @@ export default function MindLamp() {
 
   const [inverted, setInverted] = useState(false);
   const [mindlampMode, setMindlampMode] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   // MindLamp mode: instantaneous trialZ drives visuals (responsive, artistic)
   // Cumulative mode: cumZ builds over trials (PEAR protocol, scientific)
@@ -264,6 +265,26 @@ export default function MindLamp() {
 
         {/* Right: controls */}
         <div className="flex items-end gap-3 pointer-events-auto">
+          {/* Info */}
+          <button
+            onClick={() => setInfoOpen(!infoOpen)}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
+            style={{
+              background: infoOpen
+                ? (inverted ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.12)")
+                : (inverted ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)"),
+              border: `1px solid ${inverted ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.1)"}`,
+            }}
+            title="About this experiment"
+          >
+            <span style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: 14,
+              fontStyle: "italic",
+              color: inverted ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)",
+            }}>i</span>
+          </button>
+
           {/* MindLamp / Cumulative toggle */}
           <button
             onClick={() => setMindlampMode(!mindlampMode)}
@@ -360,6 +381,118 @@ export default function MindLamp() {
           </button>
         </div>
       </div>
+
+      {/* Info overlay */}
+      {infoOpen && (
+        <div
+          className="absolute z-10"
+          style={{
+            top: 0, right: 0, bottom: 0, left: 0,
+            background: inverted ? "rgba(255,255,255,0.88)" : "rgba(0,0,0,0.88)",
+            backdropFilter: "blur(12px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => setInfoOpen(false)}
+        >
+          <div
+            style={{
+              maxWidth: 580,
+              padding: 48,
+              color: inverted ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.8)",
+              fontFamily: "'Cormorant Garamond', serif",
+              lineHeight: 1.8,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: 18,
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
+                marginBottom: 28,
+                color: inverted ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)",
+              }}
+            >
+              About this experiment
+            </h2>
+
+            <p style={{ fontSize: 18, marginBottom: 24 }}>
+              A raymarched sphere breathes gently at rest — its size and color driven by a live
+              stream of true quantum random numbers sourced from photon detection hardware. When
+              cumulative deviations cross a statistical threshold, the sphere swells and its palette
+              shifts. The experiment asks whether focused intention can nudge quantum randomness
+              beyond what chance alone predicts.
+            </p>
+
+            <p style={{ fontSize: 16, marginBottom: 32, fontStyle: "italic", opacity: 0.7 }}>
+              This project draws from the PEAR Lab tradition — decades of research at Princeton
+              exploring the interaction between consciousness and physical systems.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <h3 style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: 13,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                opacity: 0.45,
+                marginBottom: 2,
+              }}>
+                Research
+              </h3>
+              <a href="https://icrl.org/" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                PEAR Laboratory — Princeton Engineering Anomalies Research
+              </a>
+              <a href="https://noosphere.princeton.edu/" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                Global Consciousness Project — Princeton
+              </a>
+              <a href="https://lfdr.de/QRNG/" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                LfD Laboratory — Quantum Random Number Generation
+              </a>
+
+              <h3 style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: 13,
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                opacity: 0.45,
+                marginTop: 16,
+                marginBottom: 2,
+              }}>
+                Watch
+              </h3>
+              <a href="https://www.youtube.com/watch?v=qw_O9Qiwqew" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                Science and the Taboo of Psi — Dean Radin at Google
+              </a>
+              <a href="https://www.youtube.com/watch?v=ufWPPSh0oPc" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                The Science of Collective Consciousness — Roger Nelson
+              </a>
+              <a href="https://www.youtube.com/watch?v=zeNZg2VUXYU" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                Global Consciousness — A Cosmology of Connection
+              </a>
+
+            </div>
+
+            <p style={{
+              fontSize: 13,
+              marginTop: 36,
+              opacity: 0.3,
+              fontStyle: "italic",
+            }}>
+              Click anywhere to close
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
