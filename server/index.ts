@@ -21,8 +21,11 @@ const isProd = process.env.NODE_ENV === "production";
 if (isProd) {
   // Serve pre-built static files
   const staticPath = path.resolve(__dirname, "..", "dist", "public");
-  app.use(express.static(staticPath));
+  // Hashed assets get long cache; index.html must never be cached
+  app.use("/assets", express.static(path.join(staticPath, "assets"), { maxAge: "1y", immutable: true }));
+  app.use(express.static(staticPath, { maxAge: 0 }));
   app.get("*", (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.sendFile(path.join(staticPath, "index.html"));
   });
 } else {
