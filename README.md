@@ -1,8 +1,8 @@
 # Quantum Sphere
 
-A real-time quantum consciousness visualizer inspired by the Princeton Engineering Anomalies Research (PEAR) Lab and Psyleron MindLamp.
+A real-time quantum consciousness visualizer inspired by the Princeton Engineering Anomalies Research (PEAR) Lab and Psyleron's MindLamp.
 
-A raymarched sphere floats in silence, driven by a live stream of true quantum random numbers. It barely moves — until the statistics deviate from pure chance. Then the sphere breathes, shifts color, and crosses thresholds that should happen only once in twenty trials, or once in a thousand. The question the experiment poses is whether conscious intention can nudge quantum randomness beyond what chance allows.
+The main object is a raymarched sphere that fluctuates lightly size and color scheme at rest, driven by a live stream of true quantum random numbers. When the deviations crosses a threshold the sphere grows slightly and the color scheme changes. The question the experiment poses is whether conscious intention can nudge quantum randomness beyond what chance allows.
 
 ## How It Works
 
@@ -16,7 +16,7 @@ The **cumulative Z-score** tracks how far the running total deviates from expect
 
 ## Use It Online
 
-Visit the hosted version *(deployment coming soon)* — no installation required. Press play and observe.
+Visit the hosted version at https://mindlamp.monkadelic.me/ — no installation required. Press play and observe.
 
 ## Run It Locally
 
@@ -39,6 +39,7 @@ Based on decades of experimental work:
 - **Dean Radin** — Meta-analyses of mind-matter interaction with RNGs. Effect size small (d ≈ 0.02–0.05) but consistent across 380+ studies.
 - **Helmut Schmidt** — Pioneered retroactive PK experiments with pre-recorded random sequences.
 - **Global Consciousness Project** — 70-node worldwide RNG network showing ~7 sigma cumulative departure during major world events.
+- For more info on research, check some great youtube videos: https://www.youtube.com/results?search_query=RNG+consciousness
 
 The original Psyleron MindLamp used quantum tunneling noise from FET transistors. This implementation uses photon-based quantum randomness accessed via API, applying the same PEAR statistical protocol.
 
