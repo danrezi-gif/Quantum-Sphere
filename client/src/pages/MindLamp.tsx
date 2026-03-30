@@ -198,7 +198,7 @@ export default function MindLamp() {
       </Canvas>
 
       {/* Title */}
-      <div className="absolute left-0 right-0 z-10 flex flex-col items-center pointer-events-none" style={{ bottom: 144 }}>
+      <div className="absolute left-0 right-0 z-10 flex flex-col items-center pointer-events-none" style={{ top: '76%' }}>
         <h1
           className="text-lg tracking-[0.35em] uppercase transition-colors duration-700"
           style={{
