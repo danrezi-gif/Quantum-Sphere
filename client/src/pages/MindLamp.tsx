@@ -95,11 +95,11 @@ function QuantumOrb({ bass, mids, absZ, inverted }: { bass: number; mids: number
     uniforms.uResolution.value.set(frameSize.width, frameSize.height);
     // Breath: gentle at rest, grows with Z — the breath IS the signal
     // Inverted mode uses smaller amplitude so sphere stays visible on white
-    const breathAmp = inv ? (0.03 + az * 0.03) : (0.05 + az * 0.05);
+    const breathAmp = inv ? (0.02 + az * 0.04) : (0.04 + az * 0.04);
     const breathSpeed = 0.4 + az * 0.15;
     const breath = breathAmp * Math.sin(t * breathSpeed);
-    uniforms.uBass.value += (b + breath - uniforms.uBass.value) * 0.008;
-    uniforms.uMids.value += (m - uniforms.uMids.value) * 0.01;
+    uniforms.uBass.value += (b + breath - uniforms.uBass.value) * 0.0016;
+    uniforms.uMids.value += (m - uniforms.uMids.value) * 0.0016;
     uniforms.uInvert.value += ((inv ? 1 : 0) - uniforms.uInvert.value) * 0.04;
   });
 
@@ -198,7 +198,7 @@ export default function MindLamp() {
       </Canvas>
 
       {/* Title */}
-      <div className="absolute left-0 right-0 bottom-36 z-10 flex flex-col items-center pointer-events-none">
+      <div className="absolute left-0 right-0 z-10 flex flex-col items-center pointer-events-none" style={{ bottom: 144 }}>
         <h1
           className="text-lg tracking-[0.35em] uppercase transition-colors duration-700"
           style={{
