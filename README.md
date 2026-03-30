@@ -2,7 +2,7 @@
 
 A real-time quantum consciousness visualizer inspired by the Princeton Engineering Anomalies Research (PEAR) Lab and Psyleron's MindLamp.
 
-The main object is a raymarched sphere that fluctuates lightly size and color scheme at rest, driven by a live stream of true quantum random numbers. When the deviations crosses a threshold the sphere grows slightly and the color scheme changes. The question the experiment poses is whether conscious intention can nudge quantum randomness beyond what chance allows.
+A raymarched sphere breathes gently at rest — its size and color driven by a live stream of true quantum random numbers sourced from photon detection hardware. When cumulative deviations cross a statistical threshold, the sphere swells and its palette shifts. The experiment asks whether focused intention can nudge quantum randomness beyond what chance alone predicts.
 
 ## How It Works
 
