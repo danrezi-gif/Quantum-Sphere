@@ -95,11 +95,11 @@ function QuantumOrb({ bass, mids, absZ, inverted }: { bass: number; mids: number
     uniforms.uResolution.value.set(frameSize.width, frameSize.height);
     // Breath: gentle at rest, grows with Z — the breath IS the signal
     // Inverted mode uses smaller amplitude so sphere stays visible on white
-    const breathAmp = inv ? (0.02 + az * 0.04) : (0.04 + az * 0.04);
+    const breathAmp = inv ? (0.03 + az * 0.03) : (0.05 + az * 0.05);
     const breathSpeed = 0.4 + az * 0.15;
     const breath = breathAmp * Math.sin(t * breathSpeed);
-    uniforms.uBass.value += (b + breath - uniforms.uBass.value) * 0.0016;
-    uniforms.uMids.value += (m - uniforms.uMids.value) * 0.0016;
+    uniforms.uBass.value += (b + breath - uniforms.uBass.value) * 0.008;
+    uniforms.uMids.value += (m - uniforms.uMids.value) * 0.01;
     uniforms.uInvert.value += ((inv ? 1 : 0) - uniforms.uInvert.value) * 0.04;
   });
 
@@ -192,12 +192,13 @@ export default function MindLamp() {
         dpr={[1, 2]}
         gl={{ antialias: false, alpha: false }}
         className="absolute inset-0"
+        style={{ zIndex: 0 }}
       >
         <QuantumOrb bass={bass} mids={mids} absZ={absZ} inverted={inverted} />
       </Canvas>
 
       {/* Title */}
-      <div className="absolute left-0 right-0 bottom-36 flex flex-col items-center pointer-events-none">
+      <div className="absolute left-0 right-0 bottom-36 z-10 flex flex-col items-center pointer-events-none">
         <h1
           className="text-lg tracking-[0.35em] uppercase transition-colors duration-700"
           style={{
@@ -220,7 +221,7 @@ export default function MindLamp() {
       </div>
 
       {/* Bottom HUD */}
-      <div className="absolute bottom-0 left-0 right-0 px-6 py-6 flex items-end justify-between">
+      <div className="absolute z-10 flex items-end justify-between" style={{ bottom: 32, left: 32, right: 32 }}>
 
         {/* Left: stats */}
         <div className="flex flex-col gap-1 font-mono text-[10px]" style={{ color: `${fg}0.3)` }}>
