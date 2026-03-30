@@ -67,7 +67,7 @@ const fragmentShader = /* glsl */`
 
 function QuantumOrb({ bass, mids, absZ, inverted }: { bass: number; mids: number; absZ: number; inverted: boolean }) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const { viewport, size } = useThree();
+  const { viewport, size, gl } = useThree();
   const invertedRef = useRef(inverted);
   invertedRef.current = inverted;
   const bassRef = useRef(bass);
@@ -85,14 +85,14 @@ function QuantumOrb({ bass, mids, absZ, inverted }: { bass: number; mids: number
     uInvert:     { value: 0 },
   }), []);
 
-  useFrame(({ clock, size: frameSize }) => {
+  useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     const b = bassRef.current;
     const m = midsRef.current;
     const az = absZRef.current;
     const inv = invertedRef.current;
     uniforms.uTime.value = t;
-    uniforms.uResolution.value.set(frameSize.width, frameSize.height);
+    uniforms.uResolution.value.set(gl.domElement.width, gl.domElement.height);
     // Breath: gentle at rest, grows with Z — the breath IS the signal
     // Inverted mode uses smaller amplitude so sphere stays visible on white
     const breathAmp = inv ? (0.02 + az * 0.04) : (0.04 + az * 0.04);
