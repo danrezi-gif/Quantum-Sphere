@@ -187,15 +187,15 @@ export default function MindLamp() {
   return (
     <div className="relative w-screen h-screen overflow-hidden select-none" style={{ background: inverted ? "#fff" : "#000" }}>
 
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 60 }}
-        dpr={[1, 2]}
-        gl={{ antialias: false, alpha: false }}
-        className="absolute inset-0"
-        style={{ zIndex: 0 }}
-      >
-        <QuantumOrb bass={bass} mids={mids} absZ={absZ} inverted={inverted} />
-      </Canvas>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 60 }}
+          dpr={[1, 2]}
+          gl={{ antialias: false, alpha: false }}
+        >
+          <QuantumOrb bass={bass} mids={mids} absZ={absZ} inverted={inverted} />
+        </Canvas>
+      </div>
 
       {/* Title */}
       <div className="absolute left-0 right-0 z-10 flex flex-col items-center pointer-events-none" style={{ top: '76%' }}>
@@ -220,28 +220,15 @@ export default function MindLamp() {
         </span>
       </div>
 
-      {/* Bottom HUD */}
-      <div className="absolute z-10 flex items-end justify-between" style={{ bottom: 32, left: 32, right: 32 }}>
-
-        {/* Left: stats */}
-        <div className="flex flex-col gap-1 font-mono text-[10px]" style={{ color: `${fg}0.3)` }}>
-          {latest && (
-            <>
-              <span>trial <span style={{ color: `${fg}0.5)` }}>{latest.trial}</span></span>
-              <span>bitsum <span style={{ color: `${fg}0.5)` }}>{latest.bitSum}/200</span></span>
-              <span>Z <span style={{ color: `${fg}0.5)` }}>{latest.trialZ > 0 ? "+" : ""}{latest.trialZ.toFixed(3)}</span></span>
-            </>
-          )}
-          {error && <span className="text-red-400/60 text-[9px]">{error}</span>}
-        </div>
-
-        {/* Center: cumulative deviation plot + threshold */}
-        <div className="flex flex-col items-center gap-2">
-          {history.length > 0 && <ZScoreMeter history={history} signalZ={signalZ} mindlampMode={mindlampMode} inverted={inverted} />}
+      {/* Center: cumulative deviation plot — truly centered */}
+      {history.length > 0 && (
+        <div className="absolute z-10 flex flex-col items-center" style={{ bottom: 32, left: '50%', transform: 'translateX(-50%)' }}>
+          <ZScoreMeter history={history} signalZ={signalZ} mindlampMode={mindlampMode} inverted={inverted} />
           {visual.thresholdCrossed && (
             <div
               className="px-4 py-1.5 rounded-full text-sm tracking-wide animate-pulse"
               style={{
+                marginTop: 8,
                 fontFamily: "'Cinzel', serif",
                 background: inverted
                   ? `hsl(${visual.hue}, 40%, 90%)`
@@ -257,6 +244,22 @@ export default function MindLamp() {
               {visual.jackpot ? "resonance" : "threshold"}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Bottom HUD — left stats + right controls */}
+      <div className="absolute z-10 flex items-end justify-between" style={{ bottom: 32, left: 32, right: 32 }}>
+
+        {/* Left: stats */}
+        <div className="flex flex-col gap-1 font-mono text-[10px]" style={{ color: `${fg}0.3)` }}>
+          {latest && (
+            <>
+              <span>trial <span style={{ color: `${fg}0.5)` }}>{latest.trial}</span></span>
+              <span>bitsum <span style={{ color: `${fg}0.5)` }}>{latest.bitSum}/200</span></span>
+              <span>Z <span style={{ color: `${fg}0.5)` }}>{latest.trialZ > 0 ? "+" : ""}{latest.trialZ.toFixed(3)}</span></span>
+            </>
+          )}
+          {error && <span className="text-red-400/60 text-[9px]">{error}</span>}
         </div>
 
         {/* Right: controls */}
