@@ -7,7 +7,7 @@
  *   mids (color shift)  → trialZ — color modulates per trial
  */
 
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useQuantumStream } from "@/hooks/useQuantumStream";
@@ -169,6 +169,13 @@ export default function MindLamp() {
   const [inverted, setInverted] = useState(false);
   const [mindlampMode, setMindlampMode] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [isPhone, setIsPhone] = useState(() => window.innerWidth < 480);
+
+  useEffect(() => {
+    const onResize = () => setIsPhone(window.innerWidth < 480);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // MindLamp mode: instantaneous trialZ drives visuals (responsive, artistic)
   // Cumulative mode: cumZ builds over trials (PEAR protocol, scientific)
@@ -199,7 +206,7 @@ export default function MindLamp() {
       </div>
 
       {/* Title */}
-      <div className="absolute left-0 right-0 z-10 flex flex-col items-center pointer-events-none" style={{ top: '76%' }}>
+      <div className="absolute left-0 right-0 z-10 flex flex-col items-center pointer-events-none" style={{ top: isPhone ? '52%' : '76%' }}>
         <h1
           className="text-lg tracking-[0.35em] uppercase transition-colors duration-700"
           style={{
@@ -223,7 +230,7 @@ export default function MindLamp() {
 
       {/* Center: cumulative deviation plot — truly centered */}
       {history.length > 0 && (
-        <div className="absolute z-10 flex flex-col items-center" style={{ bottom: 'calc(32px + env(safe-area-inset-bottom))', left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+        <div className="absolute z-10 flex flex-col items-center" style={{ bottom: isPhone ? 'calc(52px + env(safe-area-inset-bottom))' : 'calc(32px + env(safe-area-inset-bottom))', left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
           <ZScoreMeter history={history} signalZ={signalZ} mindlampMode={mindlampMode} inverted={inverted} />
           {visual.thresholdCrossed && (
             <div
@@ -248,11 +255,25 @@ export default function MindLamp() {
         </div>
       )}
 
-      {/* Bottom HUD — left stats + right controls */}
+      {/* Phone only: stats row centered above controls */}
+      {isPhone && (
+        <div className="absolute z-10 flex flex-row gap-4 font-mono text-[10px] justify-center" style={{ bottom: 'calc(32px + env(safe-area-inset-bottom) + 44px)', left: 0, right: 0, color: `${fg}0.35)` }}>
+          {latest && (
+            <>
+              <span>trial <span style={{ color: `${fg}0.55)` }}>{latest.trial}</span></span>
+              <span>bitsum <span style={{ color: `${fg}0.55)` }}>{latest.bitSum}/200</span></span>
+              <span>Z <span style={{ color: `${fg}0.55)` }}>{latest.trialZ > 0 ? "+" : ""}{latest.trialZ.toFixed(3)}</span></span>
+            </>
+          )}
+          {error && <span className="text-red-400/60 text-[9px]">{error}</span>}
+        </div>
+      )}
+
+      {/* Bottom HUD — left stats (desktop/iPad) + right controls */}
       <div className="absolute z-10 flex items-end justify-between" style={{ bottom: 'calc(32px + env(safe-area-inset-bottom))', left: 32, right: 32 }}>
 
-        {/* Left: stats */}
-        <div className="flex flex-col gap-1 font-mono text-[10px]" style={{ color: `${fg}0.3)` }}>
+        {/* Left: stats — hidden on phones (shown in centered row above) */}
+        <div className="flex flex-col gap-1 font-mono text-[10px]" style={{ color: `${fg}0.3)`, visibility: isPhone ? 'hidden' : 'visible' }}>
           {latest && (
             <>
               <span>trial <span style={{ color: `${fg}0.5)` }}>{latest.trial}</span></span>
