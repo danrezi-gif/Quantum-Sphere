@@ -119,7 +119,7 @@ function QuantumOrb({ bass, mids, absZ, inverted }: { bass: number; mids: number
 // ─── HUD ──────────────────────────────────────────────────────────────────────
 
 function ZScoreMeter({ history, signalZ, mindlampMode, inverted }: { history: { cumZ: number }[]; signalZ: number; mindlampMode: boolean; inverted: boolean }) {
-  const width = 280;
+  const width = Math.min(280, window.innerWidth - 48);
   const height = 60;
   const midY = height / 2;
 
@@ -186,7 +186,7 @@ export default function MindLamp() {
   const fg = inverted ? "rgba(0,0,0," : "rgba(255,255,255,";
 
   return (
-    <div className="relative w-full h-screen overflow-hidden select-none" style={{ background: inverted ? "#fff" : "#000" }}>
+    <div className="relative w-full overflow-hidden select-none" style={{ height: '100dvh', background: inverted ? "#fff" : "#000" }}>
 
       <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 0 }}>
         <Canvas
@@ -223,7 +223,7 @@ export default function MindLamp() {
 
       {/* Center: cumulative deviation plot — truly centered */}
       {history.length > 0 && (
-        <div className="absolute z-10 flex flex-col items-center" style={{ bottom: 32, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+        <div className="absolute z-10 flex flex-col items-center" style={{ bottom: 'calc(32px + env(safe-area-inset-bottom))', left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
           <ZScoreMeter history={history} signalZ={signalZ} mindlampMode={mindlampMode} inverted={inverted} />
           {visual.thresholdCrossed && (
             <div
@@ -249,7 +249,7 @@ export default function MindLamp() {
       )}
 
       {/* Bottom HUD — left stats + right controls */}
-      <div className="absolute z-10 flex items-end justify-between" style={{ bottom: 32, left: 32, right: 32 }}>
+      <div className="absolute z-10 flex items-end justify-between" style={{ bottom: 'calc(32px + env(safe-area-inset-bottom))', left: 32, right: 32 }}>
 
         {/* Left: stats */}
         <div className="flex flex-col gap-1 font-mono text-[10px]" style={{ color: `${fg}0.3)` }}>
@@ -399,7 +399,7 @@ export default function MindLamp() {
           <div
             style={{
               maxWidth: 580,
-              padding: 48,
+              padding: 'clamp(20px, 5vw, 48px)',
               color: inverted ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.8)",
               fontFamily: "'Cormorant Garamond', serif",
               lineHeight: 1.8,
