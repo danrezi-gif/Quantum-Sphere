@@ -7,7 +7,7 @@
  *   mids (color shift)  → trialZ — color modulates per trial
  */
 
-import { useRef, useMemo, useState, useEffect } from "react";
+import { useRef, useMemo, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useQuantumStream } from "@/hooks/useQuantumStream";
@@ -169,13 +169,6 @@ export default function MindLamp() {
   const [inverted, setInverted] = useState(false);
   const [mindlampMode, setMindlampMode] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
-  const [isPhone, setIsPhone] = useState(() => window.innerWidth < 480);
-
-  useEffect(() => {
-    const onResize = () => setIsPhone(window.innerWidth < 480);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
 
   // MindLamp mode: instantaneous trialZ drives visuals (responsive, artistic)
   // Cumulative mode: cumZ builds over trials (PEAR protocol, scientific)
@@ -193,60 +186,63 @@ export default function MindLamp() {
   const fg = inverted ? "rgba(0,0,0," : "rgba(255,255,255,";
 
   return (
-    <div className="relative w-full overflow-hidden select-none" style={{ height: '100dvh', background: inverted ? "#fff" : "#000" }}>
+    <div className="relative w-full select-none flex flex-col overflow-hidden" style={{ height: '100dvh', background: inverted ? "#fff" : "#000" }}>
 
-      <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 0 }}>
+      {/* Sphere — fills available space, capped so UI strip doesn't get pushed too low */}
+      <div className="relative flex-1 min-h-0" style={{ maxHeight: 'clamp(55dvh, 75dvh, 80dvh)' }}>
         <Canvas
           camera={{ position: [0, 0, 5], fov: 60 }}
           dpr={[1, 2]}
           gl={{ antialias: false, alpha: false }}
+          style={{ position: 'absolute', inset: 0 }}
         >
           <QuantumOrb bass={bass} mids={mids} absZ={absZ} inverted={inverted} />
         </Canvas>
       </div>
 
+      {/* Lower UI strip — floats above the bottom edge */}
+      <div style={{ marginBottom: 'clamp(16px, 3vh, 48px)' }}>
+
       {/* Title */}
-      <div className="absolute left-0 right-0 z-10 flex flex-col items-center pointer-events-none" style={{ top: isPhone ? '52%' : '76%' }}>
+      <div className="flex flex-col items-center pointer-events-none" style={{ marginTop: '-3rem', paddingTop: 'clamp(8px, 1vh, 16px)', paddingBottom: 'clamp(4px, 0.5vh, 8px)' }}>
         <h1
-          className="text-lg tracking-[0.35em] uppercase transition-colors duration-700"
-          style={{
-            fontFamily: "'Cinzel', serif",
-            color: `${fg}0.4)`,
-            letterSpacing: "0.35em",
-          }}
+          className="tracking-[0.35em] uppercase transition-colors duration-700"
+          style={{ fontFamily: "'Cinzel', serif", color: `${fg}0.4)`, letterSpacing: "0.35em", fontSize: 'clamp(15px, 2.2vw, 26px)' }}
         >
           Quantum Sphere
         </h1>
         <span
-          className="text-[9px] tracking-[0.5em] uppercase mt-1 transition-colors duration-700"
-          style={{
-            fontFamily: "'Cinzel', serif",
-            color: `${fg}0.25)`,
-          }}
+          className="tracking-[0.5em] uppercase mt-1 transition-colors duration-700"
+          style={{ fontFamily: "'Cinzel', serif", color: `${fg}0.25)`, fontSize: 'clamp(8px, 1vw, 13px)' }}
         >
           QRNG
         </span>
       </div>
 
-      {/* Center: cumulative deviation plot — truly centered */}
+      {/* Stats */}
+      <div className="flex flex-row justify-center font-mono" style={{ color: `${fg}0.3)`, paddingTop: 'clamp(12px, 1.5vh, 24px)', paddingBottom: 8, gap: 'clamp(12px, 2.5vw, 28px)', fontSize: 'clamp(10px, 1.4vw, 15px)' }}>
+        {latest && (
+          <>
+            <span>trial <span style={{ color: `${fg}0.5)` }}>{latest.trial}</span></span>
+            <span>bitsum <span style={{ color: `${fg}0.5)` }}>{latest.bitSum}/200</span></span>
+            <span>Z <span style={{ color: `${fg}0.5)` }}>{latest.trialZ > 0 ? "+" : ""}{latest.trialZ.toFixed(3)}</span></span>
+          </>
+        )}
+        {error && <span className="text-red-400/60 text-[9px]">{error}</span>}
+      </div>
+
+      {/* ZScore meter */}
       {history.length > 0 && (
-        <div className="absolute z-10 flex flex-col items-center" style={{ bottom: isPhone ? 'calc(52px + env(safe-area-inset-bottom))' : 'calc(32px + env(safe-area-inset-bottom))', left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+        <div className="flex flex-col items-center pb-2">
           <ZScoreMeter history={history} signalZ={signalZ} mindlampMode={mindlampMode} inverted={inverted} />
           {visual.thresholdCrossed && (
             <div
-              className="px-4 py-1.5 rounded-full text-sm tracking-wide animate-pulse"
+              className="px-4 py-1.5 rounded-full text-sm tracking-wide animate-pulse mt-2"
               style={{
-                marginTop: 8,
                 fontFamily: "'Cinzel', serif",
-                background: inverted
-                  ? `hsl(${visual.hue}, 40%, 90%)`
-                  : `hsl(${visual.hue}, 70%, 12%)`,
-                color: inverted
-                  ? `hsl(${visual.hue}, 60%, 30%)`
-                  : `hsl(${visual.hue}, 80%, 75%)`,
-                border: `1px solid ${inverted
-                  ? `hsl(${visual.hue}, 30%, 75%)`
-                  : `hsl(${visual.hue}, 50%, 25%)`}`,
+                background: inverted ? `hsl(${visual.hue}, 40%, 90%)` : `hsl(${visual.hue}, 70%, 12%)`,
+                color: inverted ? `hsl(${visual.hue}, 60%, 30%)` : `hsl(${visual.hue}, 80%, 75%)`,
+                border: `1px solid ${inverted ? `hsl(${visual.hue}, 30%, 75%)` : `hsl(${visual.hue}, 50%, 25%)`}`,
               }}
             >
               {visual.jackpot ? "resonance" : "threshold"}
@@ -255,158 +251,72 @@ export default function MindLamp() {
         </div>
       )}
 
-      {/* Phone only: stats row centered above controls */}
-      {isPhone && (
-        <div className="absolute z-10 flex flex-row gap-4 font-mono text-[10px] justify-center" style={{ bottom: 'calc(32px + env(safe-area-inset-bottom) + 44px)', left: 0, right: 0, color: `${fg}0.35)` }}>
-          {latest && (
-            <>
-              <span>trial <span style={{ color: `${fg}0.55)` }}>{latest.trial}</span></span>
-              <span>bitsum <span style={{ color: `${fg}0.55)` }}>{latest.bitSum}/200</span></span>
-              <span>Z <span style={{ color: `${fg}0.55)` }}>{latest.trialZ > 0 ? "+" : ""}{latest.trialZ.toFixed(3)}</span></span>
-            </>
-          )}
-          {error && <span className="text-red-400/60 text-[9px]">{error}</span>}
-        </div>
-      )}
+      {/* Controls */}
+      <div
+        className="flex items-center justify-center pointer-events-auto"
+        style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom))', paddingTop: 'clamp(16px, 2.5vh, 32px)', gap: 'clamp(10px, 2vw, 20px)' }}
+      >
+        {(() => {
+          const btnSize = 'clamp(36px, 5vw, 52px)';
+          const btnStyle = (active: boolean, activeColor: string, borderColor: string) => ({
+            width: btnSize, height: btnSize, minWidth: btnSize,
+            borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.3s',
+            background: active ? activeColor : (inverted ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)"),
+            border: `1px solid ${active ? borderColor : (inverted ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.1)")}`,
+            cursor: 'pointer',
+          });
+          const svgScale = 'clamp(11px, 1.5vw, 16px)';
+          return (<>
+            {/* Info */}
+            <button onClick={() => setInfoOpen(!infoOpen)} style={btnStyle(infoOpen, inverted ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.12)", inverted ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)")} title="About this experiment">
+              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(14px, 1.8vw, 20px)', fontStyle: "italic", color: inverted ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>i</span>
+            </button>
 
-      {/* Bottom HUD — left stats (desktop/iPad) + right controls */}
-      <div className="absolute z-10 flex items-end justify-between" style={{ bottom: 'calc(32px + env(safe-area-inset-bottom))', left: 32, right: 32 }}>
-
-        {/* Left: stats — hidden on phones (shown in centered row above) */}
-        <div className="flex flex-col gap-1 font-mono text-[10px]" style={{ color: `${fg}0.3)`, visibility: isPhone ? 'hidden' : 'visible' }}>
-          {latest && (
-            <>
-              <span>trial <span style={{ color: `${fg}0.5)` }}>{latest.trial}</span></span>
-              <span>bitsum <span style={{ color: `${fg}0.5)` }}>{latest.bitSum}/200</span></span>
-              <span>Z <span style={{ color: `${fg}0.5)` }}>{latest.trialZ > 0 ? "+" : ""}{latest.trialZ.toFixed(3)}</span></span>
-            </>
-          )}
-          {error && <span className="text-red-400/60 text-[9px]">{error}</span>}
-        </div>
-
-        {/* Right: controls */}
-        <div className="flex items-end gap-3 pointer-events-auto">
-          {/* Info */}
-          <button
-            onClick={() => setInfoOpen(!infoOpen)}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
-            style={{
-              background: infoOpen
-                ? (inverted ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.12)")
-                : (inverted ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)"),
-              border: `1px solid ${inverted ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.1)"}`,
-            }}
-            title="About this experiment"
-          >
-            <span style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontSize: 14,
-              fontStyle: "italic",
-              color: inverted ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)",
-            }}>i</span>
-          </button>
-
-          {/* MindLamp / Cumulative toggle */}
-          <button
-            onClick={() => setMindlampMode(!mindlampMode)}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
-            style={{
-              background: mindlampMode
-                ? (inverted ? "rgba(180,120,0,0.12)" : "rgba(255,200,80,0.12)")
-                : (inverted ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)"),
-              border: `1px solid ${mindlampMode
-                ? (inverted ? "rgba(180,120,0,0.3)" : "rgba(255,200,80,0.25)")
-                : (inverted ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.1)")}`,
-            }}
-            title={mindlampMode ? "MindLamp mode (instant)" : "Cumulative mode (PEAR)"}
-          >
-            <svg width="11" height="14" viewBox="0 0 11 14" fill="none">
-              <path d="M5.5 1C3.01 1 1 3.01 1 5.5c0 1.8 1.02 3.37 2.5 4.17V11h4V9.67C8.98 8.87 10 7.3 10 5.5 10 3.01 7.99 1 5.5 1Z"
-                stroke={mindlampMode
-                  ? (inverted ? "rgba(180,120,0,0.8)" : "rgba(255,200,80,0.8)")
-                  : (inverted ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)")}
-                strokeWidth="1.2" fill="none" />
-              <line x1="3.5" y1="12" x2="7.5" y2="12"
-                stroke={mindlampMode
-                  ? (inverted ? "rgba(180,120,0,0.8)" : "rgba(255,200,80,0.8)")
-                  : (inverted ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)")}
-                strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
-          </button>
-
-          {/* Invert toggle */}
-          <button
-            onClick={() => setInverted(!inverted)}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-500"
-            style={{
-              background: inverted ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)",
-              border: `1px solid ${inverted ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)"}`,
-            }}
-            title="Toggle light/dark"
-          >
-            <div
-              className="w-3.5 h-3.5 rounded-full transition-all duration-500"
-              style={{
-                background: inverted
-                  ? "linear-gradient(135deg, #222 50%, transparent 50%)"
-                  : "linear-gradient(135deg, #eee 50%, transparent 50%)",
-                border: `1px solid ${inverted ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)"}`,
-              }}
-            />
-          </button>
-
-          {/* Start / Stop */}
-          {!sessionActive ? (
-            <button
-              onClick={startSession}
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
-              style={{
-                background: inverted ? "rgba(40,180,90,0.12)" : "rgba(100,255,150,0.1)",
-                border: `1px solid ${inverted ? "rgba(40,180,90,0.3)" : "rgba(100,255,150,0.2)"}`,
-              }}
-              title="Start"
-            >
-              <svg width="12" height="14" viewBox="0 0 12 14" fill="none">
-                <path d="M2 1L11 7L2 13V1Z" fill={inverted ? "rgba(40,180,90,0.8)" : "rgba(100,255,150,0.8)"} />
+            {/* MindLamp / Cumulative toggle */}
+            <button onClick={() => setMindlampMode(!mindlampMode)} style={btnStyle(mindlampMode, inverted ? "rgba(180,120,0,0.12)" : "rgba(255,200,80,0.12)", inverted ? "rgba(180,120,0,0.3)" : "rgba(255,200,80,0.25)")} title={mindlampMode ? "MindLamp mode (instant)" : "Cumulative mode (PEAR)"}>
+              <svg width={svgScale} height={svgScale} viewBox="0 0 11 14" fill="none" style={{ width: svgScale, height: svgScale }}>
+                <path d="M5.5 1C3.01 1 1 3.01 1 5.5c0 1.8 1.02 3.37 2.5 4.17V11h4V9.67C8.98 8.87 10 7.3 10 5.5 10 3.01 7.99 1 5.5 1Z" stroke={mindlampMode ? (inverted ? "rgba(180,120,0,0.8)" : "rgba(255,200,80,0.8)") : (inverted ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)")} strokeWidth="1.2" fill="none" />
+                <line x1="3.5" y1="12" x2="7.5" y2="12" stroke={mindlampMode ? (inverted ? "rgba(180,120,0,0.8)" : "rgba(255,200,80,0.8)") : (inverted ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)")} strokeWidth="1.2" strokeLinecap="round" />
               </svg>
             </button>
-          ) : (
-            <button
-              onClick={stopSession}
-              className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
-              style={{
-                background: inverted ? "rgba(200,60,60,0.1)" : "rgba(255,100,100,0.1)",
-                border: `1px solid ${inverted ? "rgba(200,60,60,0.25)" : "rgba(255,100,100,0.2)"}`,
-              }}
-              title="Stop"
-            >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <rect width="10" height="10" rx="1" fill={inverted ? "rgba(200,60,60,0.8)" : "rgba(255,100,100,0.8)"} />
+
+            {/* Invert toggle */}
+            <button onClick={() => setInverted(!inverted)} style={{ ...btnStyle(false, '', ''), background: inverted ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)", border: `1px solid ${inverted ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)"}` }} title="Toggle light/dark">
+              <div style={{ width: 'clamp(12px, 1.6vw, 18px)', height: 'clamp(12px, 1.6vw, 18px)', borderRadius: '50%', background: inverted ? "linear-gradient(135deg, #222 50%, transparent 50%)" : "linear-gradient(135deg, #eee 50%, transparent 50%)", border: `1px solid ${inverted ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)"}`, transition: 'all 0.5s' }} />
+            </button>
+
+            {/* Start / Stop */}
+            {!sessionActive ? (
+              <button onClick={startSession} style={btnStyle(false, '', '')} title="Start" >
+                <svg viewBox="0 0 12 14" fill="none" style={{ width: svgScale, height: svgScale }}>
+                  <path d="M2 1L11 7L2 13V1Z" fill={inverted ? "rgba(40,180,90,0.8)" : "rgba(100,255,150,0.8)"} />
+                </svg>
+              </button>
+            ) : (
+              <button onClick={stopSession} style={{ ...btnStyle(false, '', ''), background: inverted ? "rgba(200,60,60,0.1)" : "rgba(255,100,100,0.1)", border: `1px solid ${inverted ? "rgba(200,60,60,0.25)" : "rgba(255,100,100,0.2)"}` }} title="Stop">
+                <svg viewBox="0 0 10 10" fill="none" style={{ width: svgScale, height: svgScale }}>
+                  <rect width="10" height="10" rx="1" fill={inverted ? "rgba(200,60,60,0.8)" : "rgba(255,100,100,0.8)"} />
+                </svg>
+              </button>
+            )}
+
+            {/* Reset */}
+            <button onClick={resetSession} style={btnStyle(false, '', '')} title="Reset">
+              <svg viewBox="0 0 12 12" fill="none" style={{ width: svgScale, height: svgScale, opacity: 0.4 }}>
+                <path d="M1 1L6 6M6 6L11 1M6 6L1 11M6 6L11 11" stroke={inverted ? "#000" : "#fff"} strokeWidth="1.5" />
               </svg>
             </button>
-          )}
-
-          {/* Reset */}
-          <button
-            onClick={resetSession}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
-            style={{
-              background: inverted ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)",
-              border: `1px solid ${inverted ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.1)"}`,
-            }}
-            title="Reset"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ opacity: 0.4 }}>
-              <path d="M1 1L6 6M6 6L11 1M6 6L1 11M6 6L11 11" stroke={inverted ? "#000" : "#fff"} strokeWidth="1.5" />
-            </svg>
-          </button>
-        </div>
+          </>);
+        })()}
       </div>
 
-      {/* Info overlay */}
+      </div>{/* end lower UI strip */}
+
+      {/* Info overlay — fullscreen, above everything */}
       {infoOpen && (
         <div
-          className="absolute z-10"
+          className="absolute z-50"
           style={{
             top: 0, right: 0, bottom: 0, left: 0,
             background: inverted ? "rgba(255,255,255,0.88)" : "rgba(0,0,0,0.88)",
@@ -414,33 +324,49 @@ export default function MindLamp() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            overflowY: "auto",
+            padding: 'clamp(44px, 7vh, 80px) clamp(24px, 5vw, 64px)',
           }}
           onClick={() => setInfoOpen(false)}
         >
           <div
             style={{
-              maxWidth: 580,
-              padding: 'clamp(20px, 5vw, 48px)',
+              maxWidth: 'clamp(320px, 70vw, 680px)',
+              width: '100%',
               color: inverted ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.8)",
               fontFamily: "'Cormorant Garamond', serif",
               lineHeight: 1.8,
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2
-              style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: 18,
-                letterSpacing: "0.25em",
-                textTransform: "uppercase",
-                marginBottom: 28,
-                color: inverted ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)",
-              }}
-            >
-              About this experiment
-            </h2>
+            {/* Close button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'clamp(20px, 3vh, 36px)' }}>
+              <h2
+                style={{
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: 'clamp(15px, 2vw, 24px)',
+                  letterSpacing: "0.25em",
+                  textTransform: "uppercase",
+                  color: inverted ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)",
+                }}
+              >
+                About this experiment
+              </h2>
+              <button
+                onClick={() => setInfoOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 'clamp(22px, 2.5vw, 32px)',
+                  lineHeight: 1,
+                  color: inverted ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)",
+                  padding: '4px 8px',
+                }}
+              >×</button>
+            </div>
 
-            <p style={{ fontSize: 18, marginBottom: 24 }}>
+            <p style={{ fontSize: 'clamp(15px, 1.8vw, 22px)', marginBottom: 'clamp(16px, 2.5vh, 28px)' }}>
               A raymarched sphere breathes gently at rest — its size and color driven by a live
               stream of true quantum random numbers sourced from photon detection hardware. When
               cumulative deviations cross a statistical threshold, the sphere swells and its palette
@@ -448,15 +374,15 @@ export default function MindLamp() {
               beyond what chance alone predicts.
             </p>
 
-            <p style={{ fontSize: 16, marginBottom: 32, fontStyle: "italic", opacity: 0.7 }}>
+            <p style={{ fontSize: 'clamp(13px, 1.5vw, 19px)', marginBottom: 'clamp(20px, 3vh, 40px)', fontStyle: "italic", opacity: 0.7 }}>
               This project draws from the PEAR Lab tradition — decades of research at Princeton
               exploring the interaction between consciousness and physical systems.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 'clamp(10px, 1.5vh, 18px)' }}>
               <h3 style={{
                 fontFamily: "'Cinzel', serif",
-                fontSize: 13,
+                fontSize: 'clamp(11px, 1.2vw, 15px)',
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
                 opacity: 0.45,
@@ -465,52 +391,44 @@ export default function MindLamp() {
                 Research
               </h3>
               <a href="https://icrl.org/" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                style={{ fontSize: 'clamp(13px, 1.5vw, 19px)', textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
                 PEAR Laboratory — Princeton Engineering Anomalies Research
               </a>
               <a href="https://noosphere.princeton.edu/" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                style={{ fontSize: 'clamp(13px, 1.5vw, 19px)', textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
                 Global Consciousness Project — Princeton
               </a>
               <a href="https://lfdr.de/QRNG/" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                style={{ fontSize: 'clamp(13px, 1.5vw, 19px)', textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
                 LfD Laboratory — Quantum Random Number Generation
               </a>
 
               <h3 style={{
                 fontFamily: "'Cinzel', serif",
-                fontSize: 13,
+                fontSize: 'clamp(11px, 1.2vw, 15px)',
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
                 opacity: 0.45,
-                marginTop: 16,
+                marginTop: 'clamp(10px, 1.5vh, 20px)',
                 marginBottom: 2,
               }}>
                 Watch
               </h3>
               <a href="https://www.youtube.com/watch?v=qw_O9Qiwqew" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                style={{ fontSize: 'clamp(13px, 1.5vw, 19px)', textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
                 Science and the Taboo of Psi — Dean Radin at Google
               </a>
               <a href="https://www.youtube.com/watch?v=ufWPPSh0oPc" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                style={{ fontSize: 'clamp(13px, 1.5vw, 19px)', textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
                 The Science of Collective Consciousness — Roger Nelson
               </a>
               <a href="https://www.youtube.com/watch?v=zeNZg2VUXYU" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 16, textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
+                style={{ fontSize: 'clamp(13px, 1.5vw, 19px)', textDecoration: "none", color: inverted ? "rgba(40,100,160,0.85)" : "rgba(150,200,255,0.85)" }}>
                 Global Consciousness — A Cosmology of Connection
               </a>
 
             </div>
 
-            <p style={{
-              fontSize: 13,
-              marginTop: 36,
-              opacity: 0.3,
-              fontStyle: "italic",
-            }}>
-              Click anywhere to close
-            </p>
           </div>
         </div>
       )}
