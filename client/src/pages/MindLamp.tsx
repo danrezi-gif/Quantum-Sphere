@@ -193,7 +193,7 @@ export default function MindLamp() {
         <Canvas
           camera={{ position: [0, 0, 5], fov: 60 }}
           dpr={[1, 2]}
-          gl={{ antialias: false, alpha: false }}
+          gl={{ antialias: false, alpha: true }}
           style={{ position: 'absolute', inset: 0 }}
         >
           <QuantumOrb bass={bass} mids={mids} absZ={absZ} inverted={inverted} />
