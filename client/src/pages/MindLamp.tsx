@@ -189,9 +189,7 @@ export default function MindLamp() {
     <div className="relative w-full select-none flex flex-col overflow-hidden" style={{ height: '100dvh', background: inverted ? "#fff" : "#000" }}>
 
       {/* Sphere — fills available space, capped so UI strip doesn't get pushed too low */}
-      <div className="relative flex-1 min-h-0" style={{ maxHeight: 'clamp(55dvh, 75dvh, 80dvh)', isolation: 'isolate' }}>
-        {/* Gradient fade at bottom to prevent seam on high-DPR phones */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 48, background: `linear-gradient(to bottom, transparent, ${inverted ? '#fff' : '#000'})`, zIndex: 1, pointerEvents: 'none' }} />
+      <div className="relative flex-1 min-h-0" style={{ maxHeight: 'clamp(55dvh, 75dvh, 80dvh)' }}>
         <Canvas
           camera={{ position: [0, 0, 5], fov: 60 }}
           dpr={[1, 2]}
@@ -203,7 +201,7 @@ export default function MindLamp() {
       </div>
 
       {/* Lower UI strip — floats above the bottom edge */}
-      <div style={{ marginBottom: 'clamp(16px, 3vh, 48px)', background: 'transparent' }}>
+      <div style={{ marginBottom: 'clamp(16px, 3vh, 48px)' }}>
 
       {/* Title */}
       <div className="flex flex-col items-center pointer-events-none" style={{ marginTop: '-3rem', paddingTop: 'clamp(8px, 1vh, 16px)', paddingBottom: 'clamp(4px, 0.5vh, 8px)' }}>
