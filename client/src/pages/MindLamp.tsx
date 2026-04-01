@@ -322,10 +322,10 @@ export default function MindLamp() {
             background: inverted ? "rgba(255,255,255,0.88)" : "rgba(0,0,0,0.88)",
             backdropFilter: "blur(12px)",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "center",
             overflowY: "auto",
-            padding: 'clamp(44px, 7vh, 80px) clamp(24px, 5vw, 64px)',
+            padding: 'clamp(60px, 9vh, 100px) clamp(24px, 5vw, 64px)',
           }}
           onClick={() => setInfoOpen(false)}
         >
@@ -367,11 +367,10 @@ export default function MindLamp() {
             </div>
 
             <p style={{ fontSize: 'clamp(15px, 1.8vw, 22px)', marginBottom: 'clamp(16px, 2.5vh, 28px)' }}>
-              A raymarched sphere breathes gently at rest — its size and color driven by a live
-              stream of true quantum random numbers sourced from photon detection hardware. When
-              cumulative deviations cross a statistical threshold, the sphere swells and its palette
-              shifts. The experiment asks whether focused intention can nudge quantum randomness
-              beyond what chance alone predicts.
+              The sphere's form and color are driven by a live stream of true random numbers sourced
+              from photon detection hardware. When cumulative deviations cross a statistical threshold,
+              the sphere swells and its palette shifts. The experiment asks whether focused intention
+              can nudge quantum randomness beyond what chance alone predicts.
             </p>
 
             <p style={{ fontSize: 'clamp(13px, 1.5vw, 19px)', marginBottom: 'clamp(20px, 3vh, 40px)', fontStyle: "italic", opacity: 0.7 }}>
@@ -379,7 +378,33 @@ export default function MindLamp() {
               exploring the interaction between consciousness and physical systems.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 'clamp(10px, 1.5vh, 18px)' }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 'clamp(6px, 1vh, 12px)' }}>
+              <h3 style={{
+                fontFamily: "'Cinzel', serif",
+                fontSize: 'clamp(11px, 1.2vw, 15px)',
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                opacity: 0.45,
+                marginBottom: 8,
+              }}>Controls</h3>
+              {[
+                ["ⓘ", "This screen."],
+                ["💡", "Toggle mode — Cumulative tracks deviation across the full session (PEAR protocol). MindLamp responds to each trial instantly, making the sphere more reactive."],
+                ["◐", "Switch between dark and light mode."],
+                ["▶", "Start or stop a session. Streams live quantum data and computes Z-scores trial by trial."],
+                ["✕", "Reset the session and clear all accumulated data."],
+              ].map(([icon, desc]) => (
+                <div key={icon} style={{ display: 'flex', gap: 16, alignItems: 'flex-start', fontSize: 'clamp(13px, 1.5vw, 17px)', padding: '4px 0' }}>
+                  <span style={{ opacity: 0.45, minWidth: '1.8em', textAlign: 'center', flexShrink: 0 }}>{icon}</span>
+                  <span style={{ opacity: 0.75, lineHeight: 1.6 }}>{desc}</span>
+                </div>
+              ))}
+              <p style={{ fontSize: 'clamp(12px, 1.3vw, 16px)', opacity: 0.45, marginTop: 4 }}>
+                The stats below the title show: <em>trial</em> (count), <em>bitsum</em> (raw bits out of 200), <em>Z</em> (trial Z-score), and <em>cumZ</em> (cumulative Z-score — the main signal).
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 'clamp(10px, 1.5vh, 18px)', marginTop: 'clamp(24px, 4vh, 44px)' }}>
               <h3 style={{
                 fontFamily: "'Cinzel', serif",
                 fontSize: 'clamp(11px, 1.2vw, 15px)',
