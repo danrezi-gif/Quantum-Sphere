@@ -273,6 +273,14 @@ export default function MindLamp() {
               <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(14px, 1.8vw, 20px)', fontStyle: "italic", color: inverted ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>i</span>
             </button>
 
+            {/* Ko-fi */}
+            <a href="https://ko-fi.com/monkadelic" target="_blank" rel="noopener noreferrer"
+              style={{ ...btnStyle(false, '', ''), textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Support on Ko-fi"
+            >
+              <span style={{ fontSize: 'clamp(14px, 1.8vw, 20px)', lineHeight: 1 }}>☕</span>
+            </a>
+
             {/* MindLamp / Cumulative toggle */}
             <button onClick={() => setMindlampMode(!mindlampMode)} style={btnStyle(mindlampMode, inverted ? "rgba(180,120,0,0.12)" : "rgba(255,200,80,0.12)", inverted ? "rgba(180,120,0,0.3)" : "rgba(255,200,80,0.25)")} title={mindlampMode ? "MindLamp mode (instant)" : "Cumulative mode (PEAR)"}>
               <svg width={svgScale} height={svgScale} viewBox="0 0 11 14" fill="none" style={{ width: svgScale, height: svgScale }}>
