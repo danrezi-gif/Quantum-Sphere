@@ -198,5 +198,10 @@ export function handleSSE(req: Request, res: Response) {
   req.on("close", () => {
     clearInterval(heartbeat);
     clients.delete(res);
+    // Auto-stop if no clients remain — prevents runaway sessions after all tabs close
+    if (clients.size === 0 && sessionActive) {
+      console.log("[quantum] last client disconnected — auto-stopping session");
+      stopSession();
+    }
   });
 }

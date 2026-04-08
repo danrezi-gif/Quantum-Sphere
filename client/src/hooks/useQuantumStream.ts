@@ -87,6 +87,7 @@ export function useQuantumStream(): QuantumStreamState {
   const [error, setError] = useState<string | null>(null);
 
   const esRef = useRef<EventSource | null>(null);
+  const sessionActiveRef = useRef(false);
 
   useEffect(() => {
     const es = new EventSource("/api/quantum/stream");
@@ -95,13 +96,17 @@ export function useQuantumStream(): QuantumStreamState {
     es.addEventListener("connected", (e) => {
       const data = JSON.parse((e as MessageEvent).data);
       setConnected(true);
-      setSessionActive(data.sessionActive ?? false);
+      const active = data.sessionActive ?? false;
+      sessionActiveRef.current = active;
+      setSessionActive(active);
       setVisual(deriveVisual(data.cumZ ?? 0));
     });
 
     es.addEventListener("session", (e) => {
       const data = JSON.parse((e as MessageEvent).data);
-      setSessionActive(data.status === "started");
+      const active = data.status === "started";
+      sessionActiveRef.current = active;
+      setSessionActive(active);
       if (data.status === "reset") {
         setHistory([]);
         setLatest(null);
@@ -137,7 +142,19 @@ export function useQuantumStream(): QuantumStreamState {
       setConnected(true);
     };
 
+    const stopIfActive = () => {
+      if (sessionActiveRef.current) {
+        navigator.sendBeacon("/api/quantum/stop");
+      }
+    };
+
+    window.addEventListener("beforeunload", stopIfActive);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") stopIfActive();
+    });
+
     return () => {
+      window.removeEventListener("beforeunload", stopIfActive);
       es.close();
       esRef.current = null;
       setConnected(false);
