@@ -1,24 +1,28 @@
-# Quantum Sphere
+# Quantum Sphere / Mindlamp
 
-A real-time quantum consciousness visualizer inspired by the Princeton Engineering Anomalies Research (PEAR) Lab and Psyleron's MindLamp.
+**An audiovisual experiment with attention, intention and quantum randomness.**
 
-A raymarched sphere breathes gently at rest — its size and color driven by a live stream of true quantum random numbers sourced from photon detection hardware. When cumulative deviations cross a statistical threshold, the sphere swells and its palette shifts. The experiment asks whether focused intention can nudge quantum randomness beyond what chance alone predicts.
+A raymarched sphere responds in real time to a stream of hardware-generated quantum random numbers. At rest it breathes gently; as cumulative deviations from expectation grow, its scale and visual state change.
 
-## How It Works
+The work is inspired by historical experiments on mind–matter interaction and by devices such as Psyleron's MindLamp. It does **not** claim that attention or intention has been shown here to influence quantum randomness. Instead, it creates a perceptual setting in which uncertainty, expectation, statistical deviation and the human tendency to search for meaning can be experienced together.
 
-Each second, 200 quantum random bytes are fetched from the [LfD Laboratory QRNG](https://www.lfdr.de/QRNG/) — an ID Quantique photon detection device at a German research lab. The least significant bit of each byte is extracted as a binary outcome (0 or 1), and the 200 bits are summed. If the source is truly random, the expected sum is 100.
+**Live:** https://mindlamp.monkadelic.me/
 
-The **cumulative Z-score** tracks how far the running total deviates from expectation across all trials. The sphere responds:
+## How it works
 
-- **At rest** (|Z| < 1.69): the sphere is nearly still, drifting by ~3%
-- **Threshold** (|Z| ≥ 1.69, p ≈ 0.05): the sphere visibly expands and shifts color
-- **Resonance** (|Z| ≥ 3.3, p < 0.001): a statistically rare event — the sphere enters a distinct state
+Each second, 200 quantum random bytes are fetched from the [LfD Laboratory QRNG](https://www.lfdr.de/QRNG/), which uses ID Quantique photon-detection hardware. The least significant bit of each byte is treated as a binary outcome, producing a stream of 0s and 1s.
 
-## Use It Online
+The interface tracks the cumulative deviation from the expected 50/50 distribution using a Z-score. The sphere uses that statistical state as visual input.
 
-Visit the hosted version at https://mindlamp.monkadelic.me/ — no installation required. Press play and observe.
+This makes the interface reactive to the random process without turning unusual fluctuations into evidence of a psychological or physical effect.
 
-## Run It Locally
+## Use it online
+
+Open https://mindlamp.monkadelic.me/ and press play.
+
+The experience is intended to be observed rather than "won": notice how quickly statistical movement acquires emotional or symbolic significance once it is given visual form.
+
+## Run it locally
 
 ```bash
 git clone https://github.com/danrezi-gif/Quantum-Sphere.git
@@ -27,30 +31,28 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5001` and press the play button. No API key needed — the LfD QRNG is free and open.
+Open `http://localhost:5001` and press play.
 
-Each session writes trial-by-trial data to `quantum-logs/` as CSV files.
+No API key is required for the public LfD QRNG endpoint. Sessions write trial-level data to `quantum-logs/` as CSV files.
 
-## The Science
+## Background
 
-Based on decades of experimental work:
+The project takes as cultural and research context a long, contested history of experiments involving random-event generators, intention and consciousness, including work associated with PEAR, Helmut Schmidt, Psyleron and the Global Consciousness Project.
 
-- **Robert Jahn & Brenda Dunne** — PEAR Lab, Princeton (1979–2007). 2.5 million trials showing a small but statistically significant effect of operator intention on random event generators.
-- **Dean Radin** — Meta-analyses of mind-matter interaction with RNGs. Effect size small (d ≈ 0.02–0.05) but consistent across 380+ studies.
-- **Helmut Schmidt** — Pioneered retroactive PK experiments with pre-recorded random sequences.
-- **Global Consciousness Project** — 70-node worldwide RNG network showing ~7 sigma cumulative departure during major world events.
-- For more info on research, check some great youtube videos: https://www.youtube.com/results?search_query=RNG+consciousness
+Those literatures remain debated, and this project does not treat them as settled evidence. Their importance here is partly conceptual: they offer a strange experimental vocabulary for asking how humans relate attention, chance, pattern and meaning.
 
-The original Psyleron MindLamp used quantum tunneling noise from FET transistors. This implementation uses photon-based quantum randomness accessed via API, applying the same PEAR statistical protocol.
+## Tech stack
 
-## Tech Stack
+- **GLSL** — raymarched sphere
+- **React + Three.js / react-three-fiber** — interface and rendering
+- **Express + Server-Sent Events** — live data stream
+- **LfD / ID Quantique** — hardware quantum random-number source
+- **Statistics** — binomial sampling and cumulative Z-score
 
-- **Shader**: GLSL raymarched sphere (based on [Shadertoy t3ySzG](https://www.shadertoy.com/view/t3ySzG))
-- **Frontend**: React + Three.js via react-three-fiber
-- **Backend**: Express + Server-Sent Events
-- **QRNG**: LfD Laboratory — ID Quantique photon detection hardware
-- **Statistics**: Binomial Z-scores, cumulative deviation (PEAR protocol)
+## Context
+
+Quantum Sphere / Mindlamp is part of [Monkadelic](https://monkadelic.me), Daniel Rezinovsky's experimental practice across consciousness, art and technology.
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT — see [LICENSE](LICENSE).
